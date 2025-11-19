@@ -1,11 +1,5 @@
 export async function getSites(req?: Request) {
   let url = "/api/sites/get";
-
-  if (typeof window === "undefined") {
-    const host = process.env.VERCEL_URL || "localhost:3000";
-    const protocol = host.includes("localhost") ? "http" : "https";
-    url = `${protocol}://${host}/api/sites/get`;
-  }
   const res = await fetch(url, {
     cache: "no-store",
   });
