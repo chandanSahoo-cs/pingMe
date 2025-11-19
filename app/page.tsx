@@ -37,6 +37,8 @@ export default function Home() {
         body: JSON.stringify({ link }),
       });
 
+      if (!res.ok) throw new Error("Failed to perform the action");
+
       if (type == "add") {
         toast.success("Added, daddy!");
       } else {

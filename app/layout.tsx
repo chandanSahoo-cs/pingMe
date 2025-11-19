@@ -20,14 +20,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Toaster />
+        <Toaster
+          toastOptions={{
+            className:
+              "bg-black text-white rounded-xl border-2 border-[#00ffff]",
+            duration: 10000,
+            closeButton: true,
+          }}
+        />
         {children}
       </body>
     </html>
