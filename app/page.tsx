@@ -1,65 +1,141 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import { Trash2Icon } from "lucide-react";
+import { getSites } from "@/lib/gitStorage";
+import { Loader } from "@/components/Loader";
 
 export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+  const [apps, setApps] = useState<string[]>([]);
+  const [link, setLink] = useState<string>("");
+
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const gistFuncWrapper = async (url: string, link: string) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ link }),
+      });
+
+      return res;
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const addApp = () => {
+    if (link.trim() && !apps.includes(link.trim())) {
+      gistFuncWrapper("/api/sites/add", link);
+      setLink("");
+    }
+  };
+
+  const removeApp = (app: string) => {
+    gistFuncWrapper("/api/sites/remove", app);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      addApp();
+    }
+  };
+
+  useEffect(() => {
+    const get = async () => {
+      setIsLoading(true);
+      try {
+        const sites = await getSites();
+        setApps(sites);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    get();
+  }, []);
+
+  return isLoading ? (
+    <Loader />
+  ) : (
+    <div className="min-h-screen bg-background p-8 md:p-16 font-sans">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-16">
+          <h1 className="text-6xl md:text-7xl font-black tracking-tight mb-2  bg-clip-text text-[#00ffff] from-primary to-secondary">
+            LINKS
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+          <div className="h-2 w-32 bg-accent rounded-full"></div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="mb-12 border-4 border-primary p-8 bg-card rounded-3xl">
+          <label className="block text-sm font-black uppercase tracking-widest text-primary mb-4">
+            Add Your App
+          </label>
+          <textarea
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="https://your-app.com"
+            className="w-full p-4 bg-background border-3 border-secondary text-foreground placeholder-muted-foreground font-mono text-lg focus:outline-none focus:border-accent focus:ring-4 focus:ring-primary/30 resize-none h-20 rounded-2xl"
+          />
+          <button
+            onClick={addApp}
+            className="mt-4 w-full bg-primary text-primary-foreground px-6 py-4 font-black text-lg uppercase tracking-widest border-3 border-primary hover:bg-secondary hover:border-secondary hover:text-secondary-foreground transition-all transform hover:scale-105 active:scale-95 rounded-2xl">
+            + Add Link
+          </button>
         </div>
-      </main>
+
+        {apps.length > 0 && (
+          <div>
+            <h2 className="text-2xl font-black uppercase tracking-widest text-secondary mb-6">
+              Your Links ({apps.length})
+            </h2>
+            <div className="grid gap-4 md:gap-6">
+              {apps.map((app, index) => (
+                <div
+                  key={index}
+                  className="border-4 border-secondary bg-card p-6 group hover:border-accent hover:bg-background transition-all transform hover:translate-x-2 rounded-2xl">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black text-primary uppercase tracking-widest mb-2">
+                        Link #{index + 1}
+                      </p>
+                      <a
+                        href={app}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-foreground font-mono break-all hover:text-accent transition-colors underline text-lg">
+                        {app}
+                      </a>
+                    </div>
+                    <button
+                      onClick={() => removeApp(app)}
+                      className=" shrink-0 p-3 bg-secondary text-secondary-foreground border-2 border-secondary hover:bg-destructive hover:border-destructive hover:scale-110 transition-all transform active:scale-95 rounded-xl"
+                      aria-label="Delete link">
+                      <Trash2Icon size={24} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {apps.length === 0 && (
+          <div className="border-4 border-dashed border-muted p-12 text-center rounded-2xl">
+            <p className="text-xl font-black uppercase tracking-widest text-muted-foreground">
+              No links yet. Add one to get started.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
