@@ -1,7 +1,11 @@
 import { getSites } from "./gitStorage";
 
 export async function pingSitesRandomized() {
-  const SITES = await getSites();
+  const gistRes = await fetch(process.env.GIST_URL!, { cache: "no-store" });
+  if (!gistRes.ok) return new Response("Failed to fetch gist", { status: 500 });
+
+  const { sites } = await gistRes.json();
+  const SITES = sites;
 
   const PATHS = [
     "/",
