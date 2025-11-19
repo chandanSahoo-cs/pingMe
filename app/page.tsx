@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash2Icon } from "lucide-react";
+import { BotIcon, BotOffIcon, Eye, EyeClosed, EyeIcon, Trash2Icon } from "lucide-react";
 import { getSites } from "@/lib/gitStorage";
 import { Loader } from "@/components/Loader";
 
@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 interface GistFuncWrapperType {
   url: string;
@@ -22,6 +23,7 @@ interface GistFuncWrapperType {
 export default function Home() {
   const [apps, setApps] = useState<string[]>([]);
   const [link, setLink] = useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const [isPasswordDialog, setIsPasswordDialog] = useState<boolean>(false);
   const [password, setPassword] = useState<string>("");
@@ -124,17 +126,29 @@ export default function Home() {
           <DialogHeader>
             <DialogTitle>Add Password</DialogTitle>
           </DialogHeader>
-          <textarea
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === "Enter") {
-                checkPasswordAndAdd();
-              }
-            }}
-            placeholder="Enter password"
-            className="w-full p-4 bg-background border-3 border-secondary text-foreground placeholder-muted-foreground font-mono text-lg focus:outline-none focus:border-accent focus:ring-4 focus:ring-primary/30 resize-none h-20 rounded-2xl"
-          />
+          <div className="flex gap-4 justify-center items-center">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  checkPasswordAndAdd();
+                }
+              }}
+              placeholder="Enter password"
+              className="w-full p-4 bg-background border-3 border-secondary text-foreground placeholder-muted-foreground font-mono text-lg focus:outline-none focus:border-accent focus:ring-4 focus:ring-primary/30 resize-none h-20 rounded-2xl"
+            />
+            <Button
+              className="h-15 w-15 p-4"
+              onClick={() => setShowPassword((prev) => !prev)}>
+              {showPassword ? (
+                <BotIcon className="size-10" />
+              ) : (
+                <BotOffIcon className="size-8" />
+              )}
+            </Button>
+          </div>
           <button
             onClick={checkPasswordAndAdd}
             className="mt-4 w-full bg-primary text-primary-foreground px-6 py-4 font-black text-lg uppercase tracking-widest border-3 border-primary hover:bg-secondary hover:border-secondary hover:text-secondary-foreground transition-all transform hover:scale-105 active:scale-95 rounded-2xl">
