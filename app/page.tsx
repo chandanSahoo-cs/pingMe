@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { BotIcon, BotOffIcon, Eye, EyeClosed, EyeIcon, Trash2Icon } from "lucide-react";
-import { getSites } from "@/lib/gitStorage";
 import { Loader } from "@/components/Loader";
+import { BotIcon, BotOffIcon, Trash2Icon } from "lucide-react";
+import { useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 
 interface GistFuncWrapperType {
   url: string;
@@ -55,7 +54,7 @@ export default function Home() {
         toast.error("Oh no cutie! Failed to remove the link");
       }
     } finally {
-      setIsLoading(false);
+      retrieveSites();
     }
   };
 
@@ -101,20 +100,21 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    const get = async () => {
-      setIsLoading(true);
-      try {
-        const sites = await getSites();
-        setApps(sites);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const retrieveSites = async () => {
+    setIsLoading(true);
+    try {
+      const sites = await fetch("/api/sites/get", { cache: "no-store" });
+      const data = await sites.json();
+      setApps(data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    get();
+  useEffect(() => {
+    retrieveSites();
   }, []);
 
   return isLoading ? (
