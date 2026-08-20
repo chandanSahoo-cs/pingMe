@@ -26,6 +26,9 @@ export default function Home() {
 
   const [isPasswordDialog, setIsPasswordDialog] = useState<boolean>(false);
   const [password, setPassword] = useState<string>("");
+  const [pendingAction, setPendingAction] = useState<
+    { type: "add" } | { type: "remove"; link: string } | null
+  >(null);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -60,7 +63,7 @@ export default function Home() {
 
   const addApp = () => {
     if (link.trim() && !apps.includes(link.trim())) {
-      gistFuncWrapper({ url: "/api/sites/add", link, type: "add" });
+      gistFuncWrapper({ url: "/api/sites/add", link: link.trim(), type: "add" });
       setLink("");
     }
   };
@@ -69,16 +72,33 @@ export default function Home() {
     gistFuncWrapper({ url: "/api/sites/remove", link: app, type: "remove" });
   };
 
-  const checkPasswordAndAdd = () => {
+  const openAddPasswordDialog = () => {
+    if (!link.trim()) return;
+    setPendingAction({ type: "add" });
+    setIsPasswordDialog(true);
+  };
+
+  const openDeletePasswordDialog = (app: string) => {
+    setPendingAction({ type: "remove", link: app });
+    setIsPasswordDialog(true);
+  };
+
+  const verifyAndExecuteAction = () => {
     const check = async () => {
       try {
         const res = await fetch("/api/verify", {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ password }),
         });
 
         if (!res.ok) throw new Error("Unauthorized");
-        addApp();
+
+        if (pendingAction?.type === "add") {
+          addApp();
+        } else if (pendingAction?.type === "remove") {
+          removeApp(pendingAction.link);
+        }
       } catch (error) {
         if ((error as Error).message === "Unauthorized") {
           toast.error("Get lost UwU!");
@@ -86,6 +106,7 @@ export default function Home() {
       } finally {
         setIsPasswordDialog(false);
         setPassword("");
+        setPendingAction(null);
       }
     };
 
@@ -95,7 +116,7 @@ export default function Home() {
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      setIsPasswordDialog(true);
+      openAddPasswordDialog();
     }
   };
 
@@ -120,10 +141,22 @@ export default function Home() {
     <Loader />
   ) : (
     <>
-      <Dialog open={isPasswordDialog} onOpenChange={setIsPasswordDialog}>
+      <Dialog
+        open={isPasswordDialog}
+        onOpenChange={(open) => {
+          setIsPasswordDialog(open);
+          if (!open) {
+            setPassword("");
+            setPendingAction(null);
+          }
+        }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Password</DialogTitle>
+            <DialogTitle>
+              {pendingAction?.type === "remove"
+                ? "Verify to Delete Link"
+                : "Enter Password"}
+            </DialogTitle>
           </DialogHeader>
           <div className="flex gap-4 justify-center items-center">
             <input
@@ -132,7 +165,7 @@ export default function Home() {
               onChange={(e) => setPassword(e.target.value)}
               onKeyPress={(e) => {
                 if (e.key === "Enter") {
-                  checkPasswordAndAdd();
+                  verifyAndExecuteAction();
                 }
               }}
               placeholder="Enter password"
@@ -149,7 +182,7 @@ export default function Home() {
             </Button>
           </div>
           <button
-            onClick={checkPasswordAndAdd}
+            onClick={verifyAndExecuteAction}
             className="mt-4 w-full bg-primary text-primary-foreground px-6 py-4 font-black text-lg uppercase tracking-widest border-3 border-primary hover:bg-secondary hover:border-secondary hover:text-secondary-foreground transition-all transform hover:scale-105 active:scale-95 rounded-2xl">
             Verify
           </button>
@@ -177,9 +210,7 @@ export default function Home() {
               className="w-full p-4 bg-background border-3 border-secondary text-foreground placeholder-muted-foreground font-mono text-lg focus:outline-none focus:border-accent focus:ring-4 focus:ring-primary/30 resize-none h-20 rounded-2xl"
             />
             <button
-              onClick={() => {
-                setIsPasswordDialog(true);
-              }}
+              onClick={openAddPasswordDialog}
               className="mt-4 w-full bg-primary text-primary-foreground px-6 py-4 font-black text-lg uppercase tracking-widest border-3 border-primary hover:bg-secondary hover:border-secondary hover:text-secondary-foreground transition-all transform hover:scale-105 active:scale-95 rounded-2xl">
               + Add Link
             </button>
@@ -209,7 +240,7 @@ export default function Home() {
                         </a>
                       </div>
                       <button
-                        onClick={() => removeApp(app)}
+                        onClick={() => openDeletePasswordDialog(app)}
                         className=" shrink-0 p-3 bg-secondary text-secondary-foreground border-2 border-secondary hover:bg-destructive hover:border-destructive hover:scale-110 transition-all transform active:scale-95 rounded-xl"
                         aria-label="Delete link">
                         <Trash2Icon size={24} />
