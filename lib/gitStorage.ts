@@ -17,7 +17,6 @@ export async function getSites(req?: Request) {
   const fileName = process.env.GIST_FILE!;
 
   const gistContent = gistMetaData.files[fileName].content;
-  console.log(gistContent);
   const data = JSON.parse(gistContent);
   return data.sites || [];
 }

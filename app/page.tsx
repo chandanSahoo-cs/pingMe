@@ -70,7 +70,6 @@ export default function Home() {
   };
 
   const checkPasswordAndAdd = () => {
-    console.log(isPasswordDialog);
     const check = async () => {
       try {
         const res = await fetch("/api/verify", {
@@ -180,7 +179,6 @@ export default function Home() {
             <button
               onClick={() => {
                 setIsPasswordDialog(true);
-                console.log(isPasswordDialog);
               }}
               className="mt-4 w-full bg-primary text-primary-foreground px-6 py-4 font-black text-lg uppercase tracking-widest border-3 border-primary hover:bg-secondary hover:border-secondary hover:text-secondary-foreground transition-all transform hover:scale-105 active:scale-95 rounded-2xl">
               + Add Link
